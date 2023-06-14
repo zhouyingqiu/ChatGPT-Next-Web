@@ -99,6 +99,51 @@ const loadAsyncGoogleFont = () => {
   document.head.appendChild(linkEl);
 };
 
+function getCookie(key: string) {
+  let re = new RegExp("s?" + key + "=([^;]+)(;|$)");
+  if (document && document.cookie && re) {
+    const matches = document.cookie.match(re);
+    if (matches && matches.length > 1) {
+      return matches[1];
+    }
+  }
+  return "";
+}
+
+const fetchHasAuth = (): Promise<boolean> => {
+  return new Promise((resolve) => {
+    // setTimeout(() => {
+    //   console.log('true')
+    //   resolve(true);
+    // }, 5000);
+    fetch(
+      `/aimaster/lqw3cNjxfdtU?phone_number=${getCookie(
+        "phone_number",
+      )}&key=${getCookie("key")}`,
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+        method: "GET",
+      },
+    )
+      .then((res) => {
+        res.json().then((r) => {
+          console.log("-------123----", r);
+          if (r.status === 0) {
+            resolve(true);
+          } else {
+            // 这里可以直接跳转到登录地址
+            resolve(false);
+          }
+        });
+      })
+      .finally(() => {
+        // console.log(123)
+      });
+  });
+};
+
 function Screen() {
   const config = useAppConfig();
   const location = useLocation();
@@ -106,9 +151,24 @@ function Screen() {
   const isAuth = location.pathname === Path.Auth;
   const isMobileScreen = useMobileScreen();
 
+  const [hasAuth, setHasAuth] = useState(false);
+
   useEffect(() => {
     loadAsyncGoogleFont();
+    async function fetchData() {
+      try {
+        const hasAuthValue = await fetchHasAuth(); // replace fetchHasAuth with your own asynchronous function to retrieve the value of hasAuth
+        setHasAuth(hasAuthValue);
+      } catch (error) {
+        console.error(error);
+      }
+    }
+    fetchData();
   }, []);
+  // const hasAuth = await getAuth()
+  if (!hasAuth) {
+    return null;
+  }
 
   return (
     <div
@@ -131,11 +191,11 @@ function Screen() {
 
           <div className={styles["window-content"]} id={SlotID.AppBody}>
             <Routes>
-              <Route path={Path.Home} element={<Chat />} />
-              <Route path={Path.NewChat} element={<NewChat />} />
-              <Route path={Path.Masks} element={<MaskPage />} />
-              <Route path={Path.Chat} element={<Chat />} />
-              <Route path={Path.Settings} element={<Settings />} />
+              <Route key={"1"} path={Path.Home} element={<Chat />} />
+              <Route key={"2"} path={Path.NewChat} element={<NewChat />} />
+              <Route key={"3"} path={Path.Masks} element={<MaskPage />} />
+              <Route key={"4"} path={Path.Chat} element={<Chat />} />
+              <Route key={"5"} path={Path.Settings} element={<Settings />} />
             </Routes>
           </div>
         </>

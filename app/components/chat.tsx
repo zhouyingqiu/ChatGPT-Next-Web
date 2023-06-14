@@ -22,6 +22,8 @@ import AutoIcon from "../icons/auto.svg";
 import BottomIcon from "../icons/bottom.svg";
 import StopIcon from "../icons/pause.svg";
 
+import minganciArr from "../utils/minganci";
+
 import {
   ChatMessage,
   SubmitKey,
@@ -534,6 +536,7 @@ export function Chat() {
   };
 
   const doSubmit = (userInput: string) => {
+    userInput = filterMinganci(userInput);
     if (userInput.trim() === "") return;
     setIsLoading(true);
     chatStore.onUserInput(userInput).then(() => setIsLoading(false));
@@ -652,6 +655,8 @@ export function Chat() {
     context.length === 0 &&
     session.messages.at(0)?.content !== BOT_HELLO.content
   ) {
+    // console.log(session.messages.at(0)?.content)
+    // console.log(BOT_HELLO)
     const copiedHello = Object.assign({}, BOT_HELLO);
     if (!accessStore.isAuthorized()) {
       copiedHello.content = Locale.Error.Unauthorized;
@@ -664,6 +669,13 @@ export function Chat() {
     (session.clearContextIndex ?? -1) >= 0
       ? session.clearContextIndex! + context.length
       : -1;
+
+  const filterMinganci = (s: string) => {
+    minganciArr.forEach((v) => {
+      s = s.replaceAll(v, "");
+    });
+    return s;
+  };
 
   // preview messages
   const messages = context
@@ -687,7 +699,7 @@ export function Chat() {
             {
               ...createMessage({
                 role: "user",
-                content: userInput,
+                content: filterMinganci(userInput),
               }),
               preview: true,
             },
@@ -789,6 +801,7 @@ export function Chat() {
         }}
       >
         {messages.map((message, i) => {
+          console.log(i);
           const isUser = message.role === "user";
           const showActions =
             !isUser &&
@@ -797,9 +810,8 @@ export function Chat() {
           const showTyping = message.preview || message.streaming;
 
           const shouldShowClearContextDivider = i === clearContextIndex - 1;
-
           return (
-            <>
+            <React.Fragment key={i}>
               <div
                 key={i}
                 className={
@@ -880,7 +892,7 @@ export function Chat() {
                 </div>
               </div>
               {shouldShowClearContextDivider && <ClearContextDivider />}
-            </>
+            </React.Fragment>
           );
         })}
       </div>
